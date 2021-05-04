@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:att-mule-applicationlogger="http://www.mulesoft.org/schema/mule/att-mule-applicationlogger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/att-mule-applicationlogger http://www.mulesoft.org/schema/mule/att-mule-applicationlogger/current/mule-att-mule-applicationlogger.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<sub-flow name="get-bulk-query-job" doc:id="7e384ce8-834c-4468-b011-564dd7971859" >
+		<salesforce:get-query-job-info-bulk-api-v2 doc:name="get-bulk-query-job-info" doc:id="02fc4da8-fa3c-4342-b47e-dddeedaac1d8" id="#[payload.id]" config-ref="Salesforce_Config1" />
+	</sub-flow>
+	<sub-flow name="create-bulk-query" doc:id="3edad3d8-8e40-4fc8-97a7-00e3cfd5e53c" >
+		<logger level="INFO" doc:name="Logger" doc:id="a3334bd7-7195-47eb-bdf9-32f565b1c02c" message="#[vars.query]" />
+		<salesforce:create-query-job-bulk-api-v2   doc:name="create-bulk-query-job" doc:id="292f7739-2a7c-424d-b831-22ce0629bde6" query="#[vars.query]" config-ref="Salesforce_Config1" >
+			<salesforce:headers >
+				<salesforce:header key="Sforce-Enable-PKChunking" value="chunkSize=50; TRUE" />
+		</salesforce:headers>
+		</salesforce:create-query-job-bulk-api-v2>
+		<logger level="INFO" doc:name="Logger" doc:id="72f62e35-f8e1-4a7a-b89e-84f3f36f6271" message="#[vars.query]" />
+	</sub-flow>
+	<sub-flow name="batch-jobStatus-sub-flow1" doc:id="704d000f-f0c3-4913-97f7-df1ab05ec182" >
+		<salesforce:batch-info-list doc:name="Batch info list" doc:id="281ecd27-fee1-4f86-8d51-18dfb00fbedd" jobId="#[%dw 2.0
+output application/java
+---
+payload]" config-ref="Salesforce_Config1"/>
+		<ee:transform doc:name="status filter and initial batch size var setter" doc:id="be9920e9-de8e-4ac5-b4d7-6d28e380a4f7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="batchComplete" ><![CDATA[%dw 2.0
+output application/java
+---
+sizeOf(payload.state filter ((item, index) -> item =="Queued" or item =="InProgress"))]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="batch-jobResult-sub-flow1" doc:id="a1a68b62-f74f-468e-86cd-fb922696ad09" >
+		<logger level="INFO" doc:name="Logger" doc:id="88db3985-0d0a-43e1-8e49-67155fef8e77" message='#["Start batch result for batch id "]'/>
+		<salesforce:get-query-job-results-bulk-api-v2 doc:name="Get query job results bulk api v 2" doc:id="86ef94bf-8519-4d5b-965f-9a8cc4074243" config-ref="Salesforce_Config1" id="#[payload.jobId]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="6ec92785-c579-4f57-9ce9-1b57d5800317" message='#["End batch result for batch id "]'/>
+	</sub-flow>
+</mule>

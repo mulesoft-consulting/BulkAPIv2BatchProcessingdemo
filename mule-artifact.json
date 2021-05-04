@@ -1,0 +1,17 @@
+{
+  "secureProperties": ["anypoint.platform.client_id", "anypoint.platform.client_secret", "mule.key", "mule.env"],
+  "redeploymentEnabled": true,
+  "name": "secure-properties",
+ "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedResources": []
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+} 

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:att-mule-applicationlogger="http://www.mulesoft.org/schema/mule/att-mule-applicationlogger"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/att-mule-applicationlogger http://www.mulesoft.org/schema/mule/att-mule-applicationlogger/current/mule-att-mule-applicationlogger.xsd">
+	
+	
+	<sub-flow name="bulk-processingSub_Flow" doc:id="440cb430-a099-4fc1-a791-a564181cca11" >
+	<ee:transform doc:name="salesforce-query" doc:id="f5400659-6a73-4b93-b4a3-41c175b7694f" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="dw/salesforce-query.dwl" variableName="query" />
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Create-bulkQuery-sub-flow" doc:id="54bf6828-7397-4a96-bcc0-c98c79698d64" name="create-bulk-query" />
+		<set-variable value="#[payload]" doc:name="set-jobInfo" variableName="jobInfo" />
+		<flow-ref doc:name="process-bulk-records-flow" doc:id="26c7c335-53b3-4e85-bb26-da8e32c3226e" name="process-bulk-records-flow"/>
+	</sub-flow>
+	</mule>

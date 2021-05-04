@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:att-mule-applicationlogger="http://www.mulesoft.org/schema/mule/att-mule-applicationlogger"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/att-mule-applicationlogger http://www.mulesoft.org/schema/mule/att-mule-applicationlogger/current/mule-att-mule-applicationlogger.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+
+<sub-flow name="WriteSFTPNew" doc:id="63111dc3-5d38-4853-8205-06ac40c37c0c" >
+			  
+		
+				
+				
+		<set-variable value="#[&quot;$(p('application.fileName'))&quot; ++  ( (now() &gt;&gt; 'America/Chicago')  as String {format: 'yyyyMMddHHmmss'})++&quot;.txt&quot;]" doc:name="SunriseFilename" doc:id="952e6170-95f1-44cd-a759-dc55bd73ad08" variableName="sunrise_filename"/>
+		
+
+		<file:write doc:name="Write" doc:id="ff9b67a4-8e54-4344-a3ff-09a3cf51b348" path="#[vars.sunrise_filename]">
+			<file:content ><![CDATA[#[%dw 2.0
+output application/csv  separator='|', header = true ,encoding = "US-ASCII"
+
+---
+
+payload]]]></file:content>
+		</file:write>
+
+		
+		<!-- <file:write doc:name="Write" doc:id="0210195a-0d8b-4069-90cc-a74fb93365c3" path="#[vars.sunrise_filename]">
+			<file:content ><![CDATA[#[%dw 2.0
+output application/csv  separator='|', header = true ,encoding = "US-ASCII"
+
+-&#45;&#45;
+
+payload]]]></file:content>
+		</file:write>
+		
+		 -->
+		
+	</sub-flow>
+<flow name="process-bulk-records-flow" doc:id="f0712ce6-ce09-4d0d-9eac-a64b0ff4f064" >
+		<try doc:name="Try" doc:id="c068f13a-f114-45f3-8c9e-ff696488c9e5">
+				<until-successful maxRetries="${common.retry.maxentries}" millisBetweenRetries="${common.retry.intervalbetweenretries}" doc:name="Until Successful">
+				<flow-ref doc:name="create-bulk-query" doc:id="36f46c97-2b42-44a0-8843-9145eb9c88c7" name="get-bulk-query-job" />
+				<set-variable value="#[payload.state]" doc:name="set-batch-state" doc:id="91af6c1d-50f9-4edc-8cb5-5b10e384cf93" variableName="batchstate" />
+				<choice doc:name="CheckIfJobCompleted" doc:id="4111f9e7-baa8-41aa-aba9-6d0a7c60b127">
+					<when expression='#[vars.batchState != "JobComplete"]'>
+						<raise-error doc:name="batch-not-completed" doc:id="ab64f4d9-08e2-4da6-a23c-36cb97bd2020" description="batchprocessig not completed" type='"CUSTOM:CUSTOM_ERROR"' />
+					</when>
+					<otherwise>
+						<logger level="INFO" doc:name="Logger" doc:id="7dd52806-a23d-4df6-865b-841433cdcccd" />
+					</otherwise>
+				</choice>
+      </until-successful>
+			<error-handler>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="08d704bc-f136-4e14-ac72-f00f5f21b5f9">
+					<logger level="INFO" doc:name="Logger" doc:id="723735f6-8f1a-47dc-8165-a301efa6c45e" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="d57e0682-b366-45a9-85bb-3a43096293ad" message='#["Bulk ID " ++ payload.id]'/>
+		<flow-ref doc:name="BulkRetryFlow" doc:id="02cd67eb-47aa-4ded-9479-5aea6cc82d67" name="BulkRetryFlow"/>
+	
+		
+	</flow>
+	
+
+	
+	<flow name="BulkRetryFlow" doc:id="bfd454a0-ce2b-473e-ba9e-a741a735cdcd" >
+		<set-payload value="#[payload.id]" doc:name="Set Payload" doc:id="28fbe2f1-e1b8-47a9-8899-635536b5f1a3" />
+		
+				<flow-ref doc:name="batch-jobStatus-sub-flow" doc:id="97c4d78f-2a7e-4926-916a-c2e8332f726d" name="batch-jobStatus-sub-flow1"/>
+				<foreach doc:name="For Each" doc:id="45bfb4dc-25ad-4845-8058-5d7e5397b380" collection="#[%dw 2.0
+output application/json
+---
+payload filter ((item, index) -&gt; item.numberRecordsProcessed&gt;0)]">
+			<flow-ref doc:name="batch-jobResult-sub-flow1" doc:id="42693ad1-4136-4fa4-b7f4-c92f5a0eb7a9" name="batch-jobResult-sub-flow1"/>
+			<flow-ref doc:name="batch-aggregator-flow" doc:id="1972467e-8ad8-4fc8-b46d-f507e8b72b4e" name="batch-aggregator-flow"/>
+				</foreach>
+				
+
+		
+	</flow>
+	<flow name="batch-aggregator-flow" doc:id="68f93b18-da1b-4a1b-9dcf-3c6e5428c239" maxConcurrency="2">
+		<batch:job jobName="log-aggregator-push-logs-flow" doc:id="4d27b06b-cc42-4684-a904-1a88340dac7e" blockSize="${common.batch.block.size}" >
+			<batch:process-records >
+				<batch:step name="push-to-external-log-repo" doc:id="77048a08-37d6-4483-b752-c392cb949ed1" >
+					<ee:transform doc:name="transform-query-res" doc:id="6719fd69-8b6d-4b1b-a520-e391840d143b">
+						<ee:message>
+							<ee:set-payload><![CDATA[
+%dw 2.0
+output application/java  
+import withMaxSize from dw::core::Strings
+
+---
+{
+
+Name:  payload.Name,
+Phone: payload.Phone
+}
+
+]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="9a16c0ac-719f-4b46-b245-19e0c63e248f" size="${common.batch.commit.size}" >
+						<flow-ref doc:name="Flow Reference" doc:id="c17d3b5a-9c80-43f4-90db-d7047b9c3f2c" name="WriteSFTPNew"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete>
+				<logger level="INFO" doc:name="Logger" doc:id="73cab64d-07de-4408-b94a-9f6df9b44732" message="COMPLETED"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	
+	
+	
+
+</mule>

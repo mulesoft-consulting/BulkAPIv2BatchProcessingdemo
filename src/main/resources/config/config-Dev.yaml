@@ -1,0 +1,32 @@
+application: 
+  api:
+    id: "123454"
+  object:
+    lead:
+      query: "SELECT Id,NAME ,phone FROM Contact"
+
+  fileName: "BulkBatchProcess_"
+  maxRecords : "30000"
+  
+salesforce:
+  username: "########"
+  password: "########"
+  token: "############"
+       
+common:
+  http:
+    idletimeout: "30000"
+    responsetimeout: "600000"
+    reconnection:
+      attempts: "2"
+      frequency: "5000"
+
+
+  retry:
+    maxentries:  "50"
+    intervalbetweenretries: "3500"
+  batch:
+      commit:
+        size: "10000"
+      block:
+        size: "20000"  

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:error-handler-plugin="http://www.mulesoft.org/schema/mule/error-handler-plugin"
+	xmlns:att-mule-applicationlogger="http://www.mulesoft.org/schema/mule/att-mule-applicationlogger"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/error-handler-plugin http://www.mulesoft.org/schema/mule/error-handler-plugin/current/mule-error-handler-plugin.xsd
+http://www.mulesoft.org/schema/mule/att-mule-applicationlogger http://www.mulesoft.org/schema/mule/att-mule-applicationlogger/current/mule-att-mule-applicationlogger.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+
+	
+	<flow name="Daily_Incremental" doc:id="3694a4bf-9524-4019-add3-742d1dfdba24">
+		<http:listener doc:name="Listener" doc:id="ab7b8b90-1da0-4191-814d-5cac902b1049" config-ref="HTTP_Listener_config" path="/trigger"/>
+		<flow-ref doc:name="bulk-processingSub_Flow" doc:id="e801cafe-3ee5-4d90-a711-7f3ae7dbe60e" name="bulk-processingSub_Flow" />
+	</flow>
+
+
+</mule>
